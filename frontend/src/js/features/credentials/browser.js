@@ -386,7 +386,7 @@ export function mountBrowserCredentialsFeature({
     const definition = getOcrProviderDefinition(provider);
     const fallbackToken = definition.id === "paddle" ? defaultPaddleToken() : defaultMineruToken();
     const token = definition.requiresToken === false ? "" : ($(`${definition.tokenField}`)?.value || fallbackToken).trim();
-    if (!token) {
+    if (definition.requiresToken !== false && !token) {
       onMissingToken?.();
       setOcrValidationMessage(definition.validationMissingMessage, "error", definition.id);
       return false;
