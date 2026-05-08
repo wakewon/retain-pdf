@@ -9,6 +9,8 @@ pub struct OcrInput {
     pub provider: String,
     #[serde(default)]
     pub mineru_token: String,
+    #[serde(default)]
+    pub mineru_local_base_url: String,
     #[serde(default = "default_model_version")]
     pub model_version: String,
     #[serde(default)]
@@ -46,6 +48,7 @@ impl Default for OcrInput {
         Self {
             provider: default_ocr_provider(),
             mineru_token: String::new(),
+            mineru_local_base_url: String::new(),
             model_version: default_model_version(),
             paddle_token: String::new(),
             paddle_api_url: String::new(),

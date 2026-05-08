@@ -123,8 +123,16 @@ pub fn build_app(state: AppState) -> Router {
             post(providers::validate_mineru_token),
         )
         .route(
+            "/api/v1/providers/mineru-local/validate",
+            post(providers::validate_mineru_local),
+        )
+        .route(
             "/api/v1/providers/paddle/validate-token",
             post(providers::validate_paddle_token),
+        )
+        .route(
+            "/api/v1/providers/openai-compatible/validate-token",
+            post(providers::validate_openai_compatible_token),
         )
         .route(
             "/api/v1/providers/deepseek/validate-token",

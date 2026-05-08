@@ -460,6 +460,10 @@ export async function validatePaddleToken(apiPrefix, payload) {
 }
 
 export async function validateDeepSeekToken(apiPrefix, payload) {
+  return validateOpenAICompatibleToken(apiPrefix, payload);
+}
+
+export async function validateOpenAICompatibleToken(apiPrefix, payload) {
   if (isMockMode()) {
     void apiPrefix;
     void payload;
@@ -469,7 +473,20 @@ export async function validateDeepSeekToken(apiPrefix, payload) {
       summary: "mock mode: token validation skipped",
     };
   }
-  return submitJson(buildApiEndpoint(apiPrefix, "providers/deepseek/validate-token"), payload);
+  return submitJson(buildApiEndpoint(apiPrefix, "providers/openai-compatible/validate-token"), payload);
+}
+
+export async function validateMineruLocal(apiPrefix, payload = {}) {
+  if (isMockMode()) {
+    void apiPrefix;
+    void payload;
+    return {
+      ok: true,
+      valid: true,
+      summary: "mock mode: local MinerU validation skipped",
+    };
+  }
+  return submitJson(buildApiEndpoint(apiPrefix, "providers/mineru-local/validate"), payload);
 }
 
 export async function fetchProtected(url, options = {}) {

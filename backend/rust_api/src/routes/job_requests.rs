@@ -147,6 +147,7 @@ fn apply_multipart_request_field(
         "translated_pdf_name" => request.render.translated_pdf_name = value.to_string(),
         "provider" => request.ocr.provider = value.to_string(),
         "mineru_token" => request.ocr.mineru_token = value.to_string(),
+        "mineru_local_base_url" => request.ocr.mineru_local_base_url = value.to_string(),
         "model_version" => request.ocr.model_version = value.to_string(),
         "paddle_token" => request.ocr.paddle_token = value.to_string(),
         "paddle_api_url" => request.ocr.paddle_api_url = value.to_string(),

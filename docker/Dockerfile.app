@@ -1,4 +1,4 @@
-FROM rust:1.81-slim-bookworm AS builder
+FROM rust:1.88-slim-bookworm AS builder
 
 ARG TYPST_VERSION=0.14.2
 ARG CMARKER_VERSION=0.1.8

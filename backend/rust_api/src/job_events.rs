@@ -386,6 +386,7 @@ fn event_provider(job: &JobSnapshot) -> Option<String> {
                 .and_then(|artifacts| artifacts.ocr_provider_diagnostics.as_ref())
                 .map(|diagnostics| match diagnostics.provider {
                     OcrProviderKind::Mineru => Some("mineru".to_string()),
+                    OcrProviderKind::MineruLocal => Some("mineru_local".to_string()),
                     OcrProviderKind::Paddle => Some("paddle".to_string()),
                     OcrProviderKind::Unknown => None,
                 })

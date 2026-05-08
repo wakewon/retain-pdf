@@ -48,6 +48,12 @@ pub struct DeepSeekTokenValidationRequest {
     pub base_url: String,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct MineruLocalValidationRequest {
+    #[serde(default)]
+    pub base_url: String,
+}
+
 pub async fn validate_mineru_token(
     Json(payload): Json<MineruTokenValidationRequest>,
 ) -> Result<Json<ApiResponse<MineruTokenValidationView>>, AppError> {
@@ -125,7 +131,58 @@ pub async fn validate_paddle_token(
     Ok(Json(ApiResponse::ok(view)))
 }
 
-pub async fn validate_deepseek_token(
+pub async fn validate_mineru_local(
+    Json(payload): Json<MineruLocalValidationRequest>,
+) -> Result<Json<ApiResponse<MineruTokenValidationView>>, AppError> {
+    let base_url = normalize_mineru_local_base_url(&payload.base_url);
+    let checked_at = now_iso();
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|err| AppError::internal(format!("build MinerU local probe client failed: {err}")))?;
+    let response = client.get(format!("{base_url}/docs")).send().await;
+    let view = match response {
+        Ok(resp) if resp.status().is_success() => MineruTokenValidationView {
+            ok: true,
+            status: "valid",
+            summary: "本地 MinerU 服务可用".to_string(),
+            retryable: false,
+            provider_code: Some(resp.status().as_u16().to_string()),
+            provider_message: Some("MinerU local probe ok".to_string()),
+            operator_hint: None,
+            trace_id: None,
+            base_url,
+            checked_at,
+        },
+        Ok(resp) => MineruTokenValidationView {
+            ok: false,
+            status: "provider_error",
+            summary: format!("本地 MinerU 服务返回 {}", resp.status().as_u16()),
+            retryable: true,
+            provider_code: Some(resp.status().as_u16().to_string()),
+            provider_message: None,
+            operator_hint: Some("请检查 mineru 容器是否启动，并确认 base_url 指向 mineru-api".to_string()),
+            trace_id: None,
+            base_url,
+            checked_at,
+        },
+        Err(err) => MineruTokenValidationView {
+            ok: false,
+            status: "network_error",
+            summary: "本地 MinerU 服务不可达".to_string(),
+            retryable: true,
+            provider_code: None,
+            provider_message: Some(err.to_string()),
+            operator_hint: Some("Docker 部署默认地址为 http://mineru:8000；浏览器经后端探测，不需要直接暴露端口".to_string()),
+            trace_id: None,
+            base_url,
+            checked_at,
+        },
+    };
+    Ok(Json(ApiResponse::ok(view)))
+}
+
+pub async fn validate_openai_compatible_token(
     Json(payload): Json<DeepSeekTokenValidationRequest>,
 ) -> Result<Json<ApiResponse<MineruTokenValidationView>>, AppError> {
     let api_key = payload.api_key.trim();
@@ -133,24 +190,43 @@ pub async fn validate_deepseek_token(
         return Err(AppError::bad_request("api_key is required"));
     }
 
-    let base_url = normalize_deepseek_base_url(&payload.base_url);
+    let base_url = normalize_openai_compatible_base_url(&payload.base_url);
     let checked_at = now_iso();
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(20))
         .build()
-        .map_err(|err| AppError::internal(format!("build deepseek probe client failed: {err}")))?;
+        .map_err(|err| AppError::internal(format!("build OpenAI-compatible probe client failed: {err}")))?;
     let models_url = format!("{}/models", base_url.trim_end_matches('/'));
 
     let response = client.get(&models_url).bearer_auth(api_key).send().await;
     let view = match response {
-        Ok(resp) => classify_deepseek_probe_response(resp, base_url.clone(), checked_at).await,
-        Err(err) => classify_deepseek_probe_transport_error(err, base_url.clone(), checked_at),
+        Ok(resp) => classify_openai_compatible_probe_response(resp, base_url.clone(), checked_at).await,
+        Err(err) => classify_openai_compatible_probe_transport_error(err, base_url.clone(), checked_at),
     };
 
     Ok(Json(ApiResponse::ok(view)))
 }
 
-fn normalize_deepseek_base_url(raw: &str) -> String {
+pub async fn validate_deepseek_token(
+    payload: Json<DeepSeekTokenValidationRequest>,
+) -> Result<Json<ApiResponse<MineruTokenValidationView>>, AppError> {
+    validate_openai_compatible_token(payload).await
+}
+
+fn normalize_mineru_local_base_url(raw: &str) -> String {
+    let trimmed = raw.trim().trim_end_matches('/');
+    if trimmed.is_empty() {
+        std::env::var("RETAIN_MINERU_LOCAL_BASE_URL")
+            .unwrap_or_else(|_| "http://mineru:8000".to_string())
+            .trim()
+            .trim_end_matches('/')
+            .to_string()
+    } else {
+        trimmed.to_string()
+    }
+}
+
+fn normalize_openai_compatible_base_url(raw: &str) -> String {
     let trimmed = raw.trim().trim_end_matches('/');
     if trimmed.is_empty() {
         "https://api.deepseek.com/v1".to_string()
@@ -159,7 +235,7 @@ fn normalize_deepseek_base_url(raw: &str) -> String {
     }
 }
 
-async fn classify_deepseek_probe_response(
+async fn classify_openai_compatible_probe_response(
     response: reqwest::Response,
     base_url: String,
     checked_at: String,
@@ -176,10 +252,10 @@ async fn classify_deepseek_probe_response(
         return MineruTokenValidationView {
             ok: true,
             status: "valid",
-            summary: "DeepSeek API Key 可用".to_string(),
+            summary: "模型 API Key 可用".to_string(),
             retryable: false,
             provider_code: Some(status_code.as_u16().to_string()),
-            provider_message: summarize_deepseek_models_payload(&body_text),
+            provider_message: summarize_openai_compatible_models_payload(&body_text),
             operator_hint: None,
             trace_id,
             base_url,
@@ -197,11 +273,11 @@ async fn classify_deepseek_probe_response(
         "provider_error"
     };
     let summary = if status == "unauthorized" {
-        "DeepSeek API Key 无效".to_string()
+        "模型 API Key 无效".to_string()
     } else if status == "network_error" {
-        "DeepSeek 连通性校验失败".to_string()
+        "模型服务连通性校验失败".to_string()
     } else {
-        format!("DeepSeek 接口返回 {}", status_code.as_u16())
+        format!("模型服务接口返回 {}", status_code.as_u16())
     };
 
     MineruTokenValidationView {
@@ -218,7 +294,7 @@ async fn classify_deepseek_probe_response(
     }
 }
 
-fn classify_deepseek_probe_transport_error(
+fn classify_openai_compatible_probe_transport_error(
     err: reqwest::Error,
     base_url: String,
     checked_at: String,
@@ -232,9 +308,9 @@ fn classify_deepseek_probe_transport_error(
         || lowered.contains("connection")
         || lowered.contains("connect")
     {
-        ("network_error", "DeepSeek 连通性校验失败")
+        ("network_error", "模型服务连通性校验失败")
     } else {
-        ("provider_error", "DeepSeek API Key 校验失败")
+        ("provider_error", "模型 API Key 校验失败")
     };
 
     MineruTokenValidationView {
@@ -251,7 +327,7 @@ fn classify_deepseek_probe_transport_error(
     }
 }
 
-fn summarize_deepseek_models_payload(body_text: &str) -> Option<String> {
+fn summarize_openai_compatible_models_payload(body_text: &str) -> Option<String> {
     let parsed: Value = serde_json::from_str(body_text).ok()?;
     let data = parsed.get("data")?.as_array()?;
     let models = data

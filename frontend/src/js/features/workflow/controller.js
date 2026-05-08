@@ -266,13 +266,19 @@ export function mountWorkflowFeature({
     const token = definition.id === "paddle"
       ? ($("paddle_token")?.value || defaultPaddleToken())
       : ($("mineru_token")?.value || defaultMineruToken());
-    return {
+    const payload = {
       provider,
-      [definition.tokenField]: token,
       model_version: DEFAULT_MODEL_VERSION,
       language: DEFAULT_LANGUAGE,
       page_ranges: pageRanges,
     };
+    if (definition.requiresToken !== false && definition.tokenField) {
+      payload[definition.tokenField] = token;
+    }
+    if (provider === "mineru_local") {
+      payload.mineru_local_base_url = "";
+    }
+    return payload;
   }
 
   function buildTranslationPayload(developerConfig) {

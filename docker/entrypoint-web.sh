@@ -3,7 +3,7 @@ set -eu
 
 : "${FRONT_API_BASE:=}"
 : "${FRONT_X_API_KEY:=}"
-: "${FRONT_OCR_PROVIDER:=paddle}"
+: "${FRONT_OCR_PROVIDER:=mineru_local}"
 : "${FRONT_PADDLE_TOKEN:=}"
 : "${FRONT_MINERU_TOKEN:=}"
 : "${FRONT_MODEL_API_KEY:=}"

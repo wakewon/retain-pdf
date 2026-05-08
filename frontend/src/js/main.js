@@ -53,7 +53,8 @@ import {
   submitJobRequest,
   submitJson,
   submitUploadRequest,
-  validateDeepSeekToken,
+  validateOpenAICompatibleToken,
+  validateMineruLocal,
   validatePaddleToken,
   validateMineruToken,
 } from "./network.js";
@@ -302,6 +303,7 @@ async function initializePage() {
     defaultPaddleToken,
     defaultModelApiKey,
     defaultModelBaseUrl,
+    defaultModelName,
     getTaskOptions: () => workflowFeature?.developerConfigWithDefaults() || {},
     saveTaskOptions: ({ mathMode, translateTitles }) => {
       state.developerConfig = {
@@ -311,10 +313,23 @@ async function initializePage() {
       };
       void savePersistedDeveloperStoredConfig(state.developerConfig);
     },
+    saveDeveloperStoredConfig: async (nextConfig) => {
+      state.developerConfig = {
+        ...(state.developerConfig || {}),
+        ...(nextConfig || {}),
+      };
+      await savePersistedDeveloperStoredConfig(state.developerConfig);
+    },
     saveBrowserStoredConfig,
     saveDesktopConfig,
     checkApiConnectivity: () => appActionsFeature?.checkApiConnectivity(),
     validateOcrToken: (apiPrefix, providerId, token) => {
+      if (providerId === "mineru_local") {
+        void token;
+        return validateMineruLocal(apiPrefix, {
+          base_url: "",
+        });
+      }
       if (providerId === "paddle") {
         return validatePaddleToken(apiPrefix, {
           paddle_token: token,
@@ -327,7 +342,7 @@ async function initializePage() {
         model_version: DEFAULT_MODEL_VERSION,
       });
     },
-    validateDeepSeekToken,
+    validateOpenAICompatibleToken,
     onCredentialStateChange: () => workflowFeature?.applyWorkflowMode(),
   });
   artifactDownloadsFeature = mountArtifactDownloadsFeature({

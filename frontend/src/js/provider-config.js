@@ -1,6 +1,23 @@
-export const DEFAULT_OCR_PROVIDER = "mineru";
+export const DEFAULT_OCR_PROVIDER = "mineru_local";
 
 export const OCR_PROVIDER_DEFINITIONS = [
+  {
+    id: "mineru_local",
+    label: "MinerU Local",
+    description: "使用 Docker 内部本地 MinerU 服务进行 OCR 和版面识别。",
+    tokenField: "",
+    runtimeConfigKey: "",
+    tokenLabel: "",
+    tokenPlaceholder: "",
+    validationButtonLabel: "检测本地 MinerU",
+    validationIdleMessage: "检测 Docker 内部 MinerU 服务是否可用。",
+    validationMissingMessage: "",
+    validationUnavailableMessage: "",
+    docsUrl: "https://opendatalab.github.io/MinerU/usage/quick_usage/",
+    docsLabel: "查看文档",
+    supportsValidation: true,
+    requiresToken: false,
+  },
   {
     id: "paddle",
     label: "PaddleOCR",
@@ -16,6 +33,7 @@ export const OCR_PROVIDER_DEFINITIONS = [
     docsUrl: "https://aistudio.baidu.com/account/accessToken",
     docsLabel: "获取 Token",
     supportsValidation: true,
+    requiresToken: true,
   },
   {
     id: "mineru",
@@ -32,23 +50,24 @@ export const OCR_PROVIDER_DEFINITIONS = [
     docsUrl: "https://mineru.net/apiManage/docs?openApplyModal=true",
     docsLabel: "获取 Token",
     supportsValidation: true,
+    requiresToken: true,
   },
 ];
 
 export const TRANSLATION_PROVIDER_DEFINITION = {
-  id: "deepseek",
-  label: "DeepSeek",
-  keyLabel: "DeepSeek Key",
-  keyPlaceholder: "填写 DeepSeek API Key",
+  id: "openai_compatible",
+  label: "OpenAI Compatible",
+  keyLabel: "模型 API Key",
+  keyPlaceholder: "填写模型 API Key",
   description: "用于正文翻译和模型调用。",
-  docsUrl: "https://platform.deepseek.com/api_keys",
-  docsLabel: "获取 Key",
-  validationButtonLabel: "检测 DeepSeek",
-  validationIdleMessage: "可检测 DeepSeek 接口是否连通。",
-  validationMissingMessage: "请先填写 DeepSeek Key。",
-  validationSuccessMessage: "DeepSeek 接口连接成功。",
-  validationNetworkMessage: "DeepSeek 接口检测失败，请检查网络或浏览器跨域限制。",
-  validationUnauthorizedMessage: "DeepSeek Key 无效或已过期。",
+  docsUrl: "https://platform.openai.com/docs/api-reference/chat",
+  docsLabel: "协议说明",
+  validationButtonLabel: "检测模型服务",
+  validationIdleMessage: "可检测 OpenAI-compatible 接口是否连通。",
+  validationMissingMessage: "请先填写模型 API Key。",
+  validationSuccessMessage: "模型服务接口连接成功。",
+  validationNetworkMessage: "模型服务接口检测失败，请检查 Base URL、Key 或网络。",
+  validationUnauthorizedMessage: "模型 API Key 无效或已过期。",
 };
 
 export function normalizeOcrProvider(value) {

@@ -1,6 +1,7 @@
 import { $ } from "../../dom.js";
 import { API_PREFIX } from "../../constants.js";
 import {
+  OCR_PROVIDER_DEFINITIONS,
   getOcrProviderDefinition,
   normalizeOcrProvider,
   TRANSLATION_PROVIDER_DEFINITION,
@@ -13,13 +14,15 @@ export function mountBrowserCredentialsFeature({
   defaultPaddleToken,
   defaultModelApiKey,
   defaultModelBaseUrl,
+  defaultModelName,
   getTaskOptions,
   saveTaskOptions,
+  saveDeveloperStoredConfig,
   saveBrowserStoredConfig,
   saveDesktopConfig,
   checkApiConnectivity,
   validateOcrToken,
-  validateDeepSeekToken,
+  validateOpenAICompatibleToken,
   onCredentialStateChange,
 }) {
   function credentialDialog() {
@@ -40,7 +43,7 @@ export function mountBrowserCredentialsFeature({
     const subtitle = $("browser-credentials-subtitle");
     if (subtitle) {
       const text = setupMode
-        ? "请先填写 OCR Provider 凭证和 DeepSeek Key。完成后桌面端会直接启动本地服务。"
+        ? "请先填写 OCR Provider 和模型 API 配置。完成后桌面端会直接启动本地服务。"
         : "";
       subtitle.textContent = text;
       subtitle.classList.toggle("hidden", !text);
@@ -140,6 +143,33 @@ export function mountBrowserCredentialsFeature({
   async function runOcrTokenValidation(providerId, token, { showResult = true } = {}) {
     const definition = getOcrProviderDefinition(providerId);
     const normalizedToken = `${token || ""}`.trim();
+    if (definition.requiresToken === false) {
+      if (showResult) {
+        setOcrValidationMessage(`正在检测 ${definition.label} 服务…`, "", definition.id);
+      }
+      try {
+        const result = await validateOcrToken(API_PREFIX, definition.id, "");
+        state.validatedOcrProvider = definition.id;
+        state.validatedOcrToken = "";
+        state.ocrValidationStatus = result.status || "";
+        if (showResult) {
+          const hint = result.operator_hint ? ` ${result.operator_hint}` : "";
+          const message = result.summary || `${definition.label} 检测结果：${result.status || "unknown"}`;
+          setOcrValidationMessage(`${message}${hint}`.trim(), result.ok ? "valid" : "error", definition.id);
+        }
+        return result;
+      } catch (_err) {
+        resetOcrValidationCache();
+        if (showResult) {
+          setOcrValidationMessage(`${definition.label} 服务检测失败，请稍后重试。`, "error", definition.id);
+        }
+        return {
+          ok: false,
+          status: "network_error",
+          summary: `${definition.label} 服务检测失败，请稍后重试。`,
+        };
+      }
+    }
     if (!normalizedToken) {
       resetOcrValidationCache();
       if (showResult) {
@@ -187,7 +217,7 @@ export function mountBrowserCredentialsFeature({
     }
   }
 
-  async function runDeepSeekConnectivityCheck(apiKey, { showResult = true } = {}) {
+  async function runModelConnectivityCheck(apiKey, baseUrl, { showResult = true } = {}) {
     const modelApiKey = `${apiKey || ""}`.trim();
     if (!modelApiKey) {
       if (showResult) {
@@ -196,12 +226,12 @@ export function mountBrowserCredentialsFeature({
       return { ok: false, status: 0 };
     }
     if (showResult) {
-      setDeepSeekValidationMessage("正在检测 DeepSeek 接口…");
+      setDeepSeekValidationMessage("正在检测模型服务接口…");
     }
     try {
-      const result = await validateDeepSeekToken(API_PREFIX, {
+      const result = await validateOpenAICompatibleToken(API_PREFIX, {
         api_key: modelApiKey,
-        base_url: defaultModelBaseUrl(),
+        base_url: baseUrl || defaultModelBaseUrl(),
       });
       if (showResult) {
         setDeepSeekValidationMessage(
@@ -226,6 +256,8 @@ export function mountBrowserCredentialsFeature({
       mineruInput: $("browser-mineru-token"),
       paddleInput: $("browser-paddle-token"),
       apiKeyInput: $("browser-api-key"),
+      baseUrlInput: $("browser-model-base-url"),
+      modelInput: $("browser-model-name"),
       mathModeSelect: $("browser-job-math-mode"),
       trigger: $("credentials-btn"),
     };
@@ -236,6 +268,8 @@ export function mountBrowserCredentialsFeature({
       mineruInput,
       paddleInput,
       apiKeyInput,
+      baseUrlInput,
+      modelInput,
       mathModeSelect,
     } = browserCredentialElements();
     const taskOptions = getTaskOptions?.() || {};
@@ -248,11 +282,18 @@ export function mountBrowserCredentialsFeature({
     if (apiKeyInput) {
       apiKeyInput.value = $("api_key").value || "";
     }
+    if (baseUrlInput) {
+      baseUrlInput.value = state.developerConfig?.baseUrl || defaultModelBaseUrl();
+    }
+    if (modelInput) {
+      modelInput.value = state.developerConfig?.model || defaultModelName();
+    }
     syncOcrProviderControls(currentOcrProvider());
     if (mathModeSelect) {
       mathModeSelect.value = taskOptions.mathMode === "placeholder" ? "placeholder" : "direct_typst";
     }
     setOcrValidationMessage("", "", "mineru");
+    setOcrValidationMessage("", "", "mineru_local");
     setOcrValidationMessage("", "", "paddle");
     setDeepSeekValidationMessage("", "");
     setDialogStatus("", "");
@@ -263,6 +304,8 @@ export function mountBrowserCredentialsFeature({
       mineruInput,
       paddleInput,
       apiKeyInput,
+      baseUrlInput,
+      modelInput,
       mathModeSelect,
     } = browserCredentialElements();
     applyKeyInputs({
@@ -275,6 +318,11 @@ export function mountBrowserCredentialsFeature({
       mathMode: mathModeSelect?.value || "direct_typst",
       translateTitles: true,
     });
+    saveDeveloperStoredConfig?.({
+      ...(state.developerConfig || {}),
+      baseUrl: baseUrlInput?.value?.trim() || defaultModelBaseUrl(),
+      model: modelInput?.value?.trim() || defaultModelName(),
+    });
     saveBrowserStoredConfig();
   }
 
@@ -283,6 +331,8 @@ export function mountBrowserCredentialsFeature({
       mineruInput,
       paddleInput,
       apiKeyInput,
+      baseUrlInput,
+      modelInput,
       mathModeSelect,
     } = browserCredentialElements();
     const provider = currentOcrProvider();
@@ -301,6 +351,11 @@ export function mountBrowserCredentialsFeature({
         markConfigured: currentCredentialDialogSetupMode(),
       },
     );
+    await saveDeveloperStoredConfig?.({
+      ...(state.developerConfig || {}),
+      baseUrl: baseUrlInput?.value?.trim() || defaultModelBaseUrl(),
+      model: modelInput?.value?.trim() || defaultModelName(),
+    });
     saveTaskOptions?.({
       mathMode: mathModeSelect?.value || "direct_typst",
       translateTitles: true,
@@ -309,7 +364,9 @@ export function mountBrowserCredentialsFeature({
 
   function hasBrowserCredentials() {
     const definition = getOcrProviderDefinition(currentOcrProvider());
-    return Boolean(($(`${definition.tokenField}`)?.value || "").trim() && ($("api_key").value || "").trim());
+    const tokenReady = definition.requiresToken === false
+      || Boolean(definition.tokenField && ($(`${definition.tokenField}`)?.value || "").trim());
+    return Boolean(tokenReady && ($("api_key").value || "").trim());
   }
 
   function openBrowserCredentialsDialog(options = {}) {
@@ -327,7 +384,7 @@ export function mountBrowserCredentialsFeature({
     const provider = currentOcrProvider();
     const definition = getOcrProviderDefinition(provider);
     const fallbackToken = definition.id === "paddle" ? defaultPaddleToken() : defaultMineruToken();
-    const token = ($(`${definition.tokenField}`)?.value || fallbackToken).trim();
+    const token = definition.requiresToken === false ? "" : ($(`${definition.tokenField}`)?.value || fallbackToken).trim();
     if (!token) {
       onMissingToken?.();
       setOcrValidationMessage(definition.validationMissingMessage, "error", definition.id);
@@ -394,7 +451,11 @@ export function mountBrowserCredentialsFeature({
 
   function currentProviderInputValue() {
     const { mineruInput, paddleInput } = browserCredentialElements();
-    return currentOcrProvider() === "paddle" ? paddleInput?.value || "" : mineruInput?.value || "";
+    const definition = getOcrProviderDefinition(currentOcrProvider());
+    if (definition.requiresToken === false) {
+      return "";
+    }
+    return definition.id === "paddle" ? paddleInput?.value || "" : mineruInput?.value || "";
   }
 
   async function handleBrowserOcrValidate() {
@@ -402,16 +463,18 @@ export function mountBrowserCredentialsFeature({
   }
 
   async function handleBrowserDeepSeekValidate() {
-    const { apiKeyInput } = browserCredentialElements();
-    await runDeepSeekConnectivityCheck(apiKeyInput?.value || "", { showResult: true });
+    const { apiKeyInput, baseUrlInput } = browserCredentialElements();
+    await runModelConnectivityCheck(apiKeyInput?.value || "", baseUrlInput?.value || "", { showResult: true });
   }
 
   async function handleBrowserCredentialSave() {
     const definition = getOcrProviderDefinition(currentOcrProvider());
     const { mineruInput, paddleInput, apiKeyInput } = browserCredentialElements();
-    const ocrToken = (definition.id === "paddle" ? paddleInput?.value : mineruInput?.value)?.trim() || "";
+    const ocrToken = definition.requiresToken === false
+      ? ""
+      : (definition.id === "paddle" ? paddleInput?.value : mineruInput?.value)?.trim() || "";
     const modelApiKey = apiKeyInput?.value?.trim() || "";
-    if (!ocrToken || !modelApiKey) {
+    if ((definition.requiresToken !== false && !ocrToken) || !modelApiKey) {
       if (!ocrToken) {
         setOcrValidationMessage(definition.validationMissingMessage, "error", definition.id);
       }
@@ -420,7 +483,9 @@ export function mountBrowserCredentialsFeature({
       }
       return;
     }
-    const validation = await runOcrTokenValidation(definition.id, ocrToken, { showResult: true });
+    const validation = definition.requiresToken === false
+      ? await runOcrTokenValidation(definition.id, "", { showResult: true })
+      : await runOcrTokenValidation(definition.id, ocrToken, { showResult: true });
     if (!validation.ok) {
       return;
     }
@@ -451,8 +516,9 @@ export function mountBrowserCredentialsFeature({
   $("browser-api-key")?.addEventListener("input", () => {
     setDeepSeekValidationMessage("", "");
   });
-  $("browser-mineru-validate-btn")?.addEventListener("click", handleBrowserOcrValidate);
-  $("browser-paddle-validate-btn")?.addEventListener("click", handleBrowserOcrValidate);
+  OCR_PROVIDER_DEFINITIONS.forEach((definition) => {
+    $(`browser-${definition.id}-validate-btn`)?.addEventListener("click", handleBrowserOcrValidate);
+  });
   $("browser-deepseek-validate-btn")?.addEventListener("click", handleBrowserDeepSeekValidate);
   $("browser-credentials-save-btn")?.addEventListener("click", handleBrowserCredentialSave);
   $("credentials-btn")?.addEventListener("click", openBrowserCredentialsDialog);

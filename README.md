@@ -111,6 +111,9 @@ http://127.0.0.1:40001
 - `40001`：前端页面
 - `41000`：Rust API
 - `42000`：简便同步接口
+- `mineru:8000`：Docker 内网本地 MinerU 服务，默认不暴露给宿主机
+
+Docker 模式默认可选择 `mineru_local`，通过内置 MinerU sidecar 在本地完成 OCR。模型和缓存会保存在 `docker/delivery/models/mineru/` 并挂载进容器，避免重建容器后重复下载。
 
 ### Docker 更新
 

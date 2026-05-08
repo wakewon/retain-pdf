@@ -275,7 +275,9 @@ async function submitJob({
   pageRanges,
   timeoutSeconds,
 }) {
-  const ocrField = ocrProvider === "paddle" ? "paddle_token" : "mineru_token";
+  const ocrField = ocrProvider === "paddle"
+    ? "paddle_token"
+    : (ocrProvider === "mineru_local" ? "" : "mineru_token");
   const payload = {
     workflow,
     source: {
@@ -287,7 +289,6 @@ async function submitJob({
     },
     ocr: {
       provider: ocrProvider,
-      [ocrField]: ocrToken,
       model_version: "vlm",
       language: "ch",
       page_ranges: pageRanges || "",
@@ -314,6 +315,9 @@ async function submitJob({
         }
       : undefined,
   };
+  if (ocrField) {
+    payload.ocr[ocrField] = ocrToken;
+  }
   const response = await safeFetch(`${apiBase}/api/v1/jobs`, {
     method: "POST",
     headers: buildHeaders(xApiKey, { "Content-Type": "application/json" }),
@@ -457,16 +461,18 @@ async function main() {
   const frontendConfig = await resolveFrontendRuntimeConfig();
   const apiBase = normalizeApiBase(args.apiBase || frontendConfig.apiBase || DEFAULT_API_BASE);
   const xApiKey = `${args.xApiKey || frontendConfig.xApiKey || process.env.RETAIN_FRONTEND_X_API_KEY || ""}`.trim();
-  const ocrToken = `${args.ocrToken || await resolveEnvBackedSecret(
-    args.ocrProvider === "paddle" ? "paddleToken" : "mineruToken",
-    args.ocrProvider === "paddle" ? ["RETAIN_PADDLE_API_TOKEN", "PADDLE_API_TOKEN"] : ["RETAIN_MINERU_API_TOKEN", "MINERU_API_TOKEN"],
-  )}`.trim();
+  const ocrToken = args.ocrProvider === "mineru_local"
+    ? ""
+    : `${args.ocrToken || await resolveEnvBackedSecret(
+      args.ocrProvider === "paddle" ? "paddleToken" : "mineruToken",
+      args.ocrProvider === "paddle" ? ["RETAIN_PADDLE_API_TOKEN", "PADDLE_API_TOKEN"] : ["RETAIN_MINERU_API_TOKEN", "MINERU_API_TOKEN"],
+    )}`.trim();
   const modelApiKey = `${args.modelApiKey || await resolveEnvBackedSecret(
     "deepseekApiKey",
     ["RETAIN_TRANSLATION_API_KEY", "DEEPSEEK_API_KEY"],
   )}`.trim();
 
-  if (!ocrToken) {
+  if (args.ocrProvider !== "mineru_local" && !ocrToken) {
     throw new Error(`Missing OCR token for provider=${args.ocrProvider}`);
   }
   if (!modelApiKey) {

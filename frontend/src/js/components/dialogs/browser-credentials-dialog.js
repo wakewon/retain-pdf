@@ -15,6 +15,9 @@ class BrowserCredentialsDialog extends HTMLElement {
           <h3>${provider.label}</h3>
           <a class="credential-card-link" href="${provider.docsUrl}" target="_blank" rel="noopener noreferrer">${provider.docsLabel}</a>
         </div>
+        ${provider.requiresToken === false ? `
+          <p class="muted">${provider.description}</p>
+        ` : `
         <label>
           <span class="developer-label">
             <span>${provider.tokenLabel}</span>
@@ -22,6 +25,7 @@ class BrowserCredentialsDialog extends HTMLElement {
           </span>
           <input id="browser-${provider.id}-token" type="text" autocomplete="off" placeholder="${provider.tokenPlaceholder}" />
         </label>
+        `}
         <div class="credential-card-actions">
           ${provider.supportsValidation ? `<button id="browser-${provider.id}-validate-btn" type="button" class="secondary">${provider.validationButtonLabel}</button>` : ""}
           <span id="browser-${provider.id}-validation" class="token-inline-status hidden">${provider.validationIdleMessage}</span>
@@ -73,6 +77,18 @@ class BrowserCredentialsDialog extends HTMLElement {
                         <span>${TRANSLATION_PROVIDER_DEFINITION.keyLabel}</span>
                       </span>
                       <input id="browser-api-key" type="text" autocomplete="off" placeholder="${TRANSLATION_PROVIDER_DEFINITION.keyPlaceholder}" />
+                    </label>
+                    <label>
+                      <span class="developer-label">
+                        <span>Base URL</span>
+                      </span>
+                      <input id="browser-model-base-url" type="text" autocomplete="off" placeholder="例如 https://api.deepseek.com/v1" />
+                    </label>
+                    <label>
+                      <span class="developer-label">
+                        <span>模型名称</span>
+                      </span>
+                      <input id="browser-model-name" type="text" autocomplete="off" placeholder="例如 deepseek-v4-flash" />
                     </label>
                     <div class="credential-card-actions">
                       <button id="browser-deepseek-validate-btn" type="button" class="secondary">${TRANSLATION_PROVIDER_DEFINITION.validationButtonLabel}</button>

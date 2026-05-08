@@ -14,6 +14,7 @@ mod artifacts;
 mod bundle_download;
 mod markdown_bundle;
 mod mineru;
+mod mineru_local;
 mod mineru_polling;
 mod mineru_retry;
 mod paddle;
@@ -138,6 +139,19 @@ async fn execute_provider_transport(
                 )
                 .await?;
             }
+            OcrProviderKind::MineruLocal => {
+                mineru_local::run_local_ocr_transport_mineru_local(
+                    deps,
+                    job,
+                    &upload_path,
+                    &workspace.provider_result_json_path,
+                    &workspace.provider_zip_path,
+                    &workspace.provider_raw_dir,
+                    &workspace.layout_json_path,
+                    parent_job_id,
+                )
+                .await?;
+            }
             OcrProviderKind::Paddle => {
                 let client = PaddleClient::new(
                     job.request_payload.ocr.paddle_api_url.clone(),
@@ -170,6 +184,11 @@ async fn execute_provider_transport(
                 parent_job_id,
             )
             .await?;
+        }
+        OcrProviderKind::MineruLocal => {
+            return Err(anyhow!(
+                "mineru_local only supports uploaded local files; remote source_url is not supported"
+            ));
         }
         OcrProviderKind::Paddle => {
             let client = PaddleClient::new(

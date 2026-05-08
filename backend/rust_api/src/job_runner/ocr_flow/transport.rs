@@ -58,6 +58,9 @@ pub(super) async fn recover_remote_source_pdf(
 ) -> Result<PathBuf> {
     match provider_kind {
         OcrProviderKind::Mineru => ensure_source_pdf_from_bundle(provider_raw_dir, source_dir),
+        OcrProviderKind::MineruLocal => Err(anyhow!(
+            "mineru_local does not support remote source recovery; use an uploaded PDF"
+        )),
         OcrProviderKind::Paddle => {
             download_source_pdf(&job.request_payload.source.source_url, source_dir).await
         }

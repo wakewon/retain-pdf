@@ -20,7 +20,7 @@ from services.document_schema import validate_document_path
 from services.document_schema import validate_document_payload
 from services.document_schema.providers import PROVIDER_PADDLE
 from services.translation.ocr.json_extractor import extract_text_items
-from services.translation.payload.translations import _default_translation_flags
+from services.translation.payload.template_records import default_translation_flags
 
 REPO_ROOT = Path(__file__).resolve().parents[5]
 
@@ -318,7 +318,7 @@ def _check_paddle_sci_extractor_policy(path: Path) -> dict:
     _require(not references, "paddle_sci_extractor_policy: reference entries should not enter extraction items")
     _require(not formula_numbers, "paddle_sci_extractor_policy: formula_number should not enter extraction items")
 
-    abstract_flags = {_default_translation_flags(item.block_type, item.metadata) for item in abstracts}
+    abstract_flags = {default_translation_flags(item.block_type, item.metadata) for item in abstracts}
 
     _require(
         any(should_translate for _, should_translate, _ in abstract_flags),

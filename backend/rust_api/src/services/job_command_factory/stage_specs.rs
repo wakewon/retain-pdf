@@ -32,6 +32,13 @@ fn provider_stage_spec_path(job_paths: &JobPaths) -> PathBuf {
     job_paths.specs_dir.join("provider.spec.json")
 }
 
+fn normalize_adapter_provider(provider: &str) -> &str {
+    match provider.trim().to_ascii_lowercase().as_str() {
+        "mineru_local" | "mineru-local" | "local_mineru" => "mineru",
+        _ => provider,
+    }
+}
+
 fn ensure_specs_dir(job_paths: &JobPaths) -> Result<()> {
     fs::create_dir_all(&job_paths.specs_dir)
         .with_context(|| format!("create specs dir: {}", job_paths.specs_dir.display()))
@@ -60,7 +67,7 @@ pub(crate) fn write_normalize_stage_spec(
             "workflow": request.workflow,
         },
         "inputs": {
-            "provider": request.ocr.provider,
+            "provider": normalize_adapter_provider(&request.ocr.provider),
             "source_json": source_json_path,
             "source_pdf": source_pdf_path,
             "provider_version": provider_version,
@@ -219,6 +226,7 @@ pub(crate) fn write_provider_stage_spec(
             "provider": request.ocr.provider,
             "credential_ref": provider_credential_ref,
             "model_version": request.ocr.model_version,
+            "mineru_local_base_url": request.ocr.mineru_local_base_url,
             "paddle_api_url": request.ocr.paddle_api_url,
             "paddle_model": request.ocr.paddle_model,
             "is_ocr": request.ocr.is_ocr,

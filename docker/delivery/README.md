@@ -95,13 +95,15 @@ http://127.0.0.1:40001
 ## 文件作用
 
 - `docker-compose.yml`
-  Docker 编排入口。默认直接拉取 Docker Hub 镜像并启动 `app` + `web`。
+  Docker 编排入口。默认启动 `app` + `web` + `mineru`，也支持本地 `docker compose build app web mineru`。
 - `docker/app.env`
   后端运行参数。控制容器内路径、字体、端口、并发和上传限制。
 - `docker/web.env`
   Docker 公共版前端运行参数。控制前端默认注入的后端 key、模型默认值等。
 - `docker/auth.local.json`
   Rust API 鉴权白名单。前端和 CLI 都需要用这里配置的后端 key 才能访问接口。
+- `models/mineru/`
+  本地 MinerU 模型与缓存目录，会挂载到 `mineru` 容器内的 `/models/mineru`，避免重建容器后反复下载权重。
 
 ## 常见修改项
 
@@ -121,7 +123,7 @@ http://127.0.0.1:40001
 - `FRONT_X_API_KEY`
   前端自动附带给后端的 `X-API-Key`。必须和 `docker/auth.local.json` 中某个值一致。
 - `FRONT_OCR_PROVIDER`
-  前端默认 OCR provider。当前建议填 `paddle`，也可以切成 `mineru`。
+  前端默认 OCR provider。Docker 模式建议填 `mineru_local`；也可以切成在线 `mineru` 或 `paddle`。
 - `FRONT_PADDLE_TOKEN`
   前端默认带出的 Paddle token。留空时，最终用户自己在页面弹窗里填写。
 - `FRONT_MINERU_TOKEN`
@@ -129,9 +131,9 @@ http://127.0.0.1:40001
 - `FRONT_MODEL_API_KEY`
   前端默认带出的模型 API key。留空时由最终用户自己填写。
 - `FRONT_MODEL`
-  前端默认模型名，例如 `deepseek-v4-flash`。
+  前端默认模型名，例如 `deepseek-v4-flash`、`gpt-4o-mini` 或其他 OpenAI 兼容服务商模型名。
 - `FRONT_BASE_URL`
-  前端默认模型服务地址，例如 `https://api.deepseek.com/v1`。
+  前端默认模型服务地址。RetainPDF 按 OpenAI Chat Completions 协议调用 `{base_url}/chat/completions`。
 
 ### docker/app.env
 
@@ -155,6 +157,8 @@ http://127.0.0.1:40001
   完整 API 在容器内监听的端口，默认 `41000`。
 - `RUST_API_SIMPLE_PORT`
   简便同步接口在容器内监听的端口，默认 `42000`。
+- `RETAIN_MINERU_LOCAL_BASE_URL`
+  后端访问本地 MinerU sidecar 的地址。Docker 默认是 `http://mineru:8000`。
 - `RUST_API_MAX_RUNNING_JOBS`
   最大并发运行任务数。
 - `RUST_API_NORMAL_MAX_BYTES`
@@ -168,18 +172,53 @@ http://127.0.0.1:40001
   - `40001`：前端页面
   - `41000`：完整 Rust API
   - `42000`：简便同步接口
+  - `mineru:8000`：仅 Docker 内网访问，不默认暴露给宿主机
 - 前端通过同源代理访问后端；普通用户通常不需要手工理解 `API Base`
-- 当前主线前端默认 OCR provider 是 `paddle`
+- 当前 Docker 前端默认 OCR provider 是 `mineru_local`
 - 页面里显示的大小 / 页数限制来自当前后端运行配置，不应再按旧的 MinerU 固定上游限制理解
+
+## 本地 MinerU 模型目录
+
+Docker 模式会把当前目录下的 `models/mineru/` 挂载到 MinerU 容器内：
+
+```text
+docker/delivery/models/mineru  ->  /models/mineru
+```
+
+容器内同时设置：
+
+- `HOME=/models/mineru`
+- `HF_HOME=/models/mineru/.cache/huggingface`
+- `MODELSCOPE_CACHE=/models/mineru/.cache/modelscope`
+- `MINERU_MODEL_SOURCE=local`
+
+这样模型权重、`mineru.json` 和下载缓存都会留在宿主机目录里，重建容器不会清空。
+
+默认情况下，如果 `models/mineru/` 里还没有 `mineru.json`，容器启动脚本会先执行 `mineru-models-download`，下载源默认是 `modelscope`：
+
+```bash
+MINERU_DOWNLOAD_MODELS_ON_START=1 \
+MINERU_MODEL_DOWNLOAD_SOURCE=modelscope \
+MINERU_MODEL_DOWNLOAD_TYPE=pipeline \
+docker compose up -d mineru
+```
+
+如果你已经手动准备好了模型，或者希望 MinerU 在首次解析时按自身配置加载模型，可以关闭启动下载：
+
+```bash
+MINERU_DOWNLOAD_MODELS_ON_START=0 docker compose up -d mineru
+```
+
+可选下载源包括 `modelscope` 和 `huggingface`；可选模型类型包括 `pipeline`、`vlm`、`all`。网络环境不适合 HuggingFace 时，建议使用 `modelscope`。
 
 ## 可选默认值
 
 如果你想让前端默认带出下游配置，可以继续填写：
 
 - `FRONT_OCR_PROVIDER`
+- `FRONT_MODEL_API_KEY`
 - `FRONT_PADDLE_TOKEN`
 - `FRONT_MINERU_TOKEN`
-- `FRONT_MODEL_API_KEY`
 - `FRONT_MODEL`
 - `FRONT_BASE_URL`
 

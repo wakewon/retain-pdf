@@ -87,7 +87,7 @@ pub fn validate_mineru_upload_limits(
                 true,
             )?;
         }
-        OcrProviderKind::Unknown => {}
+        OcrProviderKind::MineruLocal | OcrProviderKind::Unknown => {}
     }
     Ok(())
 }
@@ -130,6 +130,9 @@ fn validate_provider_token(
     input: &CreateJobInput,
     provider_kind: &OcrProviderKind,
 ) -> Result<(), AppError> {
+    if matches!(provider_kind, OcrProviderKind::MineruLocal) {
+        return Ok(());
+    }
     let token = provider_token(provider_kind, &input.ocr);
     let field_name = provider_token_field_name(provider_kind).unwrap_or("provider_token");
     let display_name = provider_display_name(provider_kind).unwrap_or("Provider");

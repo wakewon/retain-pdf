@@ -19,6 +19,7 @@ pub use types::{
 pub fn parse_provider_kind(value: &str) -> OcrProviderKind {
     match value.trim().to_ascii_lowercase().as_str() {
         "mineru" => OcrProviderKind::Mineru,
+        "mineru_local" | "mineru-local" | "local_mineru" => OcrProviderKind::MineruLocal,
         "paddle" => OcrProviderKind::Paddle,
         _ => OcrProviderKind::Unknown,
     }
