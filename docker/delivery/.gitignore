@@ -1,2 +1,4 @@
 .ipynb_checkpoints/
 **/.ipynb_checkpoints/
+docker/*.local.env
+docker/auth.local.local.json

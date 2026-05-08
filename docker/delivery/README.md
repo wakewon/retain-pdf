@@ -94,20 +94,40 @@ http://127.0.0.1:40001
 
 ## 文件作用
 
+- `docker/*.example`
+  示例配置模板（可提交到 Git）。包含注释和占位值，不应放真实密钥。
+- `docker/*.local.*`
+  本地运行配置（已加入 `.gitignore`）。实际部署请使用这些文件。
 - `docker-compose.yml`
   Docker 编排入口。默认启动 `app` + `web`；重型 MinerU sidecar 放在 `mineru-sidecar` profile 中，需要时再启用。
 - `docker/app.env`
   后端运行参数。控制容器内路径、字体、端口、并发和上传限制。
-- `docker/web.env`
-  Docker 公共版前端运行参数。控制前端默认注入的后端 key、模型默认值等。
+- `docker/web.env.example`
+  Docker 公共版前端运行参数模板。包含注释与占位值，用于生成本地 `docker/web.local.env`。
 - `docker/auth.local.json`
   Rust API 鉴权白名单。前端和 CLI 都需要用这里配置的后端 key 才能访问接口。
 - `models/mineru/`
   可选 MinerU sidecar 的模型与缓存目录。默认推荐使用宿主机 MinerU bridge 时不会用到这个目录。
 
+## 初始化本地配置
+
+首次部署前先从示例复制一份本地配置：
+
+```bash
+cp docker/app.env.example docker/app.local.env
+cp docker/web.env.example docker/web.local.env
+cp docker/auth.local.example.json docker/auth.local.local.json
+```
+
+`docker-compose.yml` 默认读取本地文件：
+
+- `docker/app.local.env`
+- `docker/web.local.env`
+- `docker/auth.local.local.json`
+
 ## 常见修改项
 
-### docker/auth.local.json
+### docker/auth.local.local.json
 
 - `api_keys`
   Rust API 允许访问的后端 key 列表。前端请求头里的 `X-API-Key` 必须命中这里的某一个值。
@@ -116,12 +136,12 @@ http://127.0.0.1:40001
 - `simple_port`
   简便同步接口在容器内监听的端口，默认 `42000`。对外通常不直接暴露。
 
-### docker/web.env
+### docker/web.local.env
 
 - `FRONT_API_BASE`
   前端内部使用的 API 基地址。通常留空，让前端自动走同源代理。
 - `FRONT_X_API_KEY`
-  前端自动附带给后端的 `X-API-Key`。必须和 `docker/auth.local.json` 中某个值一致。
+  前端自动附带给后端的 `X-API-Key`。必须和 `docker/auth.local.local.json` 中某个值一致。
 - `FRONT_OCR_PROVIDER`
   前端默认 OCR provider。Docker 模式建议填 `mineru_local`；也可以切成在线 `mineru` 或 `paddle`。
 - `FRONT_PADDLE_TOKEN`
@@ -135,7 +155,7 @@ http://127.0.0.1:40001
 - `FRONT_BASE_URL`
   前端默认模型服务地址。RetainPDF 按 OpenAI Chat Completions 协议调用 `{base_url}/chat/completions`。
 
-### docker/app.env
+### docker/app.local.env
 
 - `PROJECT_ROOT`
   容器内项目根目录。
@@ -223,7 +243,7 @@ docker compose up -d app web
 http://host.docker.internal:18080
 ```
 
-Linux Docker 如果不支持 `host.docker.internal`，可在 `docker/app.env` 中把 `RETAIN_MINERU_LOCAL_BASE_URL` 改为宿主机网关或局域网 IP。
+Linux Docker 如果不支持 `host.docker.internal`，可在 `docker/app.local.env` 中把 `RETAIN_MINERU_LOCAL_BASE_URL` 改为宿主机网关或局域网 IP。
 
 ## 可选 MinerU Sidecar
 
@@ -265,7 +285,7 @@ MINERU_DOWNLOAD_MODELS_ON_START=0 docker compose up -d mineru
 
 可选下载源包括 `modelscope` 和 `huggingface`；可选模型类型包括 `pipeline`、`vlm`、`all`。网络环境不适合 HuggingFace 时，建议使用 `modelscope`。
 
-启用 sidecar 时，需要把 `docker/app.env` 里的地址改为：
+启用 sidecar 时，需要把 `docker/app.local.env` 里的地址改为：
 
 ```text
 RETAIN_MINERU_LOCAL_BASE_URL=http://mineru:8000

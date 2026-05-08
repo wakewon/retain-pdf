@@ -8,13 +8,13 @@ services:
       dockerfile: docker/Dockerfile.app
     restart: unless-stopped
     env_file:
-      - ./docker/app.env
+      - ./docker/app.local.env
     ports:
       - "${APP_PORT:-41000}:41000"
       - "${APP_SIMPLE_PORT:-42000}:42000"
     volumes:
       - app_data:/data
-      - ./docker/auth.local.json:/app/backend/rust_api/auth.local.json:ro
+      - ./docker/auth.local.local.json:/app/backend/rust_api/auth.local.json:ro
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:41000/health"]
       interval: 30s
@@ -56,7 +56,7 @@ services:
       app:
         condition: service_healthy
     env_file:
-      - ./docker/web.env
+      - ./docker/web.local.env
     ports:
       - "${WEB_PORT:-40001}:80"
     healthcheck:
