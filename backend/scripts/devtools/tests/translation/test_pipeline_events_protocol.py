@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 
-REPO_SCRIPTS_ROOT = Path("/home/wxyhgk/tmp/Code/backend/scripts")
+REPO_SCRIPTS_ROOT = Path("/workspace/example-project/backend/scripts")
 sys.path.insert(0, str(REPO_SCRIPTS_ROOT))
 
 from services.pipeline_shared.events import emit_artifact_published

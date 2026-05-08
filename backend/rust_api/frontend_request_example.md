@@ -4,9 +4,9 @@
 
 配合主文档使用：
 
-- [Rust API README](/home/wxyhgk/tmp/Code/backend/rust_api/README.md)
-- [API_SPEC](/home/wxyhgk/tmp/Code/backend/rust_api/API_SPEC.md)
-- [CURRENT_API_MAP](/home/wxyhgk/tmp/Code/backend/rust_api/CURRENT_API_MAP.md)
+- [Rust API README](/workspace/example-project/backend/rust_api/README.md)
+- [API_SPEC](/workspace/example-project/backend/rust_api/API_SPEC.md)
+- [CURRENT_API_MAP](/workspace/example-project/backend/rust_api/CURRENT_API_MAP.md)
 
 文档约定：
 

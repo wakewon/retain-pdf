@@ -7,13 +7,13 @@
 ## 最常见入口
 
 - 改 HTTP 接口：
-  [`src/routes`](/home/wxyhgk/tmp/Code/backend/rust_api/src/routes)
+  [`src/routes`](/workspace/example-project/backend/rust_api/src/routes)
 - 改 jobs 用例编排：
-  [`src/services/jobs`](/home/wxyhgk/tmp/Code/backend/rust_api/src/services/jobs)
+  [`src/services/jobs`](/workspace/example-project/backend/rust_api/src/services/jobs)
 - 改 worker 运行链路：
-  [`src/job_runner`](/home/wxyhgk/tmp/Code/backend/rust_api/src/job_runner)
+  [`src/job_runner`](/workspace/example-project/backend/rust_api/src/job_runner)
 - 改 OCR provider 分发和适配：
-  [`src/ocr_provider`](/home/wxyhgk/tmp/Code/backend/rust_api/src/ocr_provider)
+  [`src/ocr_provider`](/workspace/example-project/backend/rust_api/src/ocr_provider)
 
 ## 目录地图
 
@@ -24,11 +24,11 @@
 - 进入条件：
   只有在改全局资源、启动逻辑、路由挂载时才进这里。
 - 关键文件：
-  - [`src/app/state.rs`](/home/wxyhgk/tmp/Code/backend/rust_api/src/app/state.rs)
+  - [`src/app/state.rs`](/workspace/example-project/backend/rust_api/src/app/state.rs)
     `AppState` 和全局资源初始化。
-  - [`src/app/router.rs`](/home/wxyhgk/tmp/Code/backend/rust_api/src/app/router.rs)
+  - [`src/app/router.rs`](/workspace/example-project/backend/rust_api/src/app/router.rs)
     axum 路由总挂载点。
-  - [`src/app/jobs.rs`](/home/wxyhgk/tmp/Code/backend/rust_api/src/app/jobs.rs)
+  - [`src/app/jobs.rs`](/workspace/example-project/backend/rust_api/src/app/jobs.rs)
     jobs facade 组合根。这里负责把 `AppState` 装成 `JobsFacade`，`routes` 不再直接碰 `job_runner`。
 
 ### `src/routes`
@@ -87,15 +87,15 @@
 
 #### 其他 service 入口
 
-- [`src/services/upload_api.rs`](/home/wxyhgk/tmp/Code/backend/rust_api/src/services/upload_api.rs)
+- [`src/services/upload_api.rs`](/workspace/example-project/backend/rust_api/src/services/upload_api.rs)
   上传接口入口。
-- [`src/services/glossary_api.rs`](/home/wxyhgk/tmp/Code/backend/rust_api/src/services/glossary_api.rs)
+- [`src/services/glossary_api.rs`](/workspace/example-project/backend/rust_api/src/services/glossary_api.rs)
   术语表接口入口。
-- [`src/services/job_snapshot_factory.rs`](/home/wxyhgk/tmp/Code/backend/rust_api/src/services/job_snapshot_factory.rs)
+- [`src/services/job_snapshot_factory.rs`](/workspace/example-project/backend/rust_api/src/services/job_snapshot_factory.rs)
   job snapshot/command 构造边界。
-- [`src/services/job_launcher.rs`](/home/wxyhgk/tmp/Code/backend/rust_api/src/services/job_launcher.rs)
+- [`src/services/job_launcher.rs`](/workspace/example-project/backend/rust_api/src/services/job_launcher.rs)
   job 持久化与启动边界。
-- [`src/services/runtime_gateway.rs`](/home/wxyhgk/tmp/Code/backend/rust_api/src/services/runtime_gateway.rs)
+- [`src/services/runtime_gateway.rs`](/workspace/example-project/backend/rust_api/src/services/runtime_gateway.rs)
   services 访问 runtime 能力的收口层。
 
 ### `src/job_runner`
@@ -195,15 +195,15 @@
 
 如果第一次进这个后端，建议按这个顺序看：
 
-1. [`src/app/router.rs`](/home/wxyhgk/tmp/Code/backend/rust_api/src/app/router.rs)
+1. [`src/app/router.rs`](/workspace/example-project/backend/rust_api/src/app/router.rs)
    先知道有哪些 HTTP 入口。
-2. [`src/app/jobs.rs`](/home/wxyhgk/tmp/Code/backend/rust_api/src/app/jobs.rs)
+2. [`src/app/jobs.rs`](/workspace/example-project/backend/rust_api/src/app/jobs.rs)
    再看 jobs 相关依赖是怎么装起来的。
-3. [`src/routes/jobs`](/home/wxyhgk/tmp/Code/backend/rust_api/src/routes/jobs)
+3. [`src/routes/jobs`](/workspace/example-project/backend/rust_api/src/routes/jobs)
    看 route 只是怎么转发。
-4. [`src/services/jobs/facade`](/home/wxyhgk/tmp/Code/backend/rust_api/src/services/jobs/facade)
+4. [`src/services/jobs/facade`](/workspace/example-project/backend/rust_api/src/services/jobs/facade)
    看 command/query 用例入口。
-5. [`src/services/jobs/creation`](/home/wxyhgk/tmp/Code/backend/rust_api/src/services/jobs/creation)
+5. [`src/services/jobs/creation`](/workspace/example-project/backend/rust_api/src/services/jobs/creation)
    看创建链路的准备、快照、提交、bundle。
-6. [`src/job_runner`](/home/wxyhgk/tmp/Code/backend/rust_api/src/job_runner)
+6. [`src/job_runner`](/workspace/example-project/backend/rust_api/src/job_runner)
    最后再进 runtime 执行层。

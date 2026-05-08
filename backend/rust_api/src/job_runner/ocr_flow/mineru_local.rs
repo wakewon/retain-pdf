@@ -15,7 +15,7 @@ use super::artifacts::persist_provider_result;
 use super::markdown_bundle::export_markdown_bundle;
 use super::save_ocr_job;
 
-const DEFAULT_MINERU_LOCAL_BASE_URL: &str = "http://mineru:8000";
+const DEFAULT_MINERU_LOCAL_BASE_URL: &str = "http://host.docker.internal:18080";
 const MINERU_LOCAL_TIMEOUT_SECS: u64 = 1800;
 
 pub(super) fn resolve_mineru_local_base_url(configured: &str) -> String {

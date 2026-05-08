@@ -14,7 +14,7 @@ from pathlib import Path
 DEFAULT_HOST = os.environ.get("RETAIN_PDF_FRONTEND_BIND_HOST", "0.0.0.0")
 DEFAULT_PORT = int(os.environ.get("RETAIN_PDF_FRONTEND_PORT", "40001"))
 DEFAULT_ROOT = Path(
-    os.environ.get("RETAIN_PDF_FRONTEND_ROOT", "/home/wxyhgk/tmp/Code/frontend")
+    os.environ.get("RETAIN_PDF_FRONTEND_ROOT", "/workspace/example-project/frontend")
 ).resolve()
 DEFAULT_API_BASE = os.environ.get("RETAIN_PDF_FRONTEND_API_BASE", "").strip()
 DEFAULT_X_API_KEY = os.environ.get("RETAIN_PDF_FRONTEND_X_API_KEY", "").strip()

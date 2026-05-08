@@ -2,7 +2,7 @@
   "schema": "layout_fit_block_samples",
   "schema_version": "1.0",
   "source_job_id": "20260407033349-ffe2e4",
-  "source_job_root": "/home/wxyhgk/tmp/Code/data/jobs/20260407033349-ffe2e4",
+  "source_job_root": "/workspace/example-project/data/jobs/20260407033349-ffe2e4",
   "source_pdf_page_count": 13,
   "samples": [
     {

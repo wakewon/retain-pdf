@@ -9,13 +9,13 @@
 相关资料：
 
 - Paddle 官方异步接口示例：
-  [`AsyncParse.md`](/home/wxyhgk/tmp/Code/backend/rust_api/src/ocr_provider/paddle/AsyncParse.md)
+  [`AsyncParse.md`](/workspace/example-project/backend/rust_api/src/ocr_provider/paddle/AsyncParse.md)
 - Rust client：
-  [`client.rs`](/home/wxyhgk/tmp/Code/backend/rust_api/src/ocr_provider/paddle/client.rs)
+  [`client.rs`](/workspace/example-project/backend/rust_api/src/ocr_provider/paddle/client.rs)
 - Python client：
-  [`backend/scripts/services/ocr_provider/paddle_api.py`](/home/wxyhgk/tmp/Code/backend/scripts/services/ocr_provider/paddle_api.py)
+  [`backend/scripts/services/ocr_provider/paddle_api.py`](/workspace/example-project/backend/scripts/services/ocr_provider/paddle_api.py)
 - provider 边界：
-  [`PROVIDER_BOUNDARY.md`](/home/wxyhgk/tmp/Code/backend/rust_api/src/ocr_provider/paddle/PROVIDER_BOUNDARY.md)
+  [`PROVIDER_BOUNDARY.md`](/workspace/example-project/backend/rust_api/src/ocr_provider/paddle/PROVIDER_BOUNDARY.md)
 
 ## 1. 我们当前用的是哪套接口
 
@@ -32,9 +32,9 @@
 当前代码入口：
 
 - Rust：
-  [`client.rs`](/home/wxyhgk/tmp/Code/backend/rust_api/src/ocr_provider/paddle/client.rs)
+  [`client.rs`](/workspace/example-project/backend/rust_api/src/ocr_provider/paddle/client.rs)
 - Python：
-  [`paddle_api.py`](/home/wxyhgk/tmp/Code/backend/scripts/services/ocr_provider/paddle_api.py)
+  [`paddle_api.py`](/workspace/example-project/backend/scripts/services/ocr_provider/paddle_api.py)
 
 ## 2. 鉴权方式
 
@@ -52,7 +52,7 @@ Accept: application/json
 
 Python 读取口：
 
-- [`get_paddle_token(...)`](/home/wxyhgk/tmp/Code/backend/scripts/services/ocr_provider/paddle_api.py)
+- [`get_paddle_token(...)`](/workspace/example-project/backend/scripts/services/ocr_provider/paddle_api.py)
 
 ## 3. 三段式协议
 
@@ -110,7 +110,7 @@ Python 读取口：
 
 对应实现：
 
-- [`status.rs`](/home/wxyhgk/tmp/Code/backend/rust_api/src/ocr_provider/paddle/status.rs)
+- [`status.rs`](/workspace/example-project/backend/rust_api/src/ocr_provider/paddle/status.rs)
 
 ## 3.3 download result
 
@@ -130,9 +130,9 @@ Python 读取口：
 对应实现：
 
 - Rust：
-  [`client.rs`](/home/wxyhgk/tmp/Code/backend/rust_api/src/ocr_provider/paddle/client.rs)
+  [`client.rs`](/workspace/example-project/backend/rust_api/src/ocr_provider/paddle/client.rs)
 - Python：
-  [`paddle_api.py`](/home/wxyhgk/tmp/Code/backend/scripts/services/ocr_provider/paddle_api.py)
+  [`paddle_api.py`](/workspace/example-project/backend/scripts/services/ocr_provider/paddle_api.py)
 
 ## 4. 当前我们实际传的关键参数
 
@@ -158,7 +158,7 @@ Python 读取口：
 
 对应实现：
 
-- [`build_optional_payload(...)`](/home/wxyhgk/tmp/Code/backend/scripts/services/ocr_provider/paddle_api.py)
+- [`build_optional_payload(...)`](/workspace/example-project/backend/scripts/services/ocr_provider/paddle_api.py)
 
 ## 5. 错误口径
 
@@ -174,7 +174,7 @@ Python 读取口：
 
 Rust 统一错误映射：
 
-- [`errors.rs`](/home/wxyhgk/tmp/Code/backend/rust_api/src/ocr_provider/paddle/errors.rs)
+- [`errors.rs`](/workspace/example-project/backend/rust_api/src/ocr_provider/paddle/errors.rs)
 
 ## 6. 与 `document.v1` 的边界
 

@@ -46,6 +46,8 @@ pub struct DeepSeekTokenValidationRequest {
     pub api_key: String,
     #[serde(default)]
     pub base_url: String,
+    #[serde(default)]
+    pub model: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -161,7 +163,7 @@ pub async fn validate_mineru_local(
             retryable: true,
             provider_code: Some(resp.status().as_u16().to_string()),
             provider_message: None,
-            operator_hint: Some("请检查 mineru 容器是否启动，并确认 base_url 指向 mineru-api".to_string()),
+            operator_hint: Some("请检查本机 MinerU bridge 或 mineru-api 是否启动，并确认 base_url 可从后端容器访问".to_string()),
             trace_id: None,
             base_url,
             checked_at,
@@ -173,7 +175,7 @@ pub async fn validate_mineru_local(
             retryable: true,
             provider_code: None,
             provider_message: Some(err.to_string()),
-            operator_hint: Some("Docker 部署默认地址为 http://mineru:8000；浏览器经后端探测，不需要直接暴露端口".to_string()),
+            operator_hint: Some("Docker 默认通过 http://host.docker.internal:18080 访问宿主机 MinerU bridge；如启用 sidecar，可改为 http://mineru:8000".to_string()),
             trace_id: None,
             base_url,
             checked_at,
@@ -191,6 +193,7 @@ pub async fn validate_openai_compatible_token(
     }
 
     let base_url = normalize_openai_compatible_base_url(&payload.base_url);
+    let model = payload.model.trim().to_string();
     let checked_at = now_iso();
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(20))
@@ -200,7 +203,28 @@ pub async fn validate_openai_compatible_token(
 
     let response = client.get(&models_url).bearer_auth(api_key).send().await;
     let view = match response {
-        Ok(resp) => classify_openai_compatible_probe_response(resp, base_url.clone(), checked_at).await,
+        Ok(resp) if should_fallback_to_chat_probe(resp.status()) && !model.is_empty() => {
+            probe_openai_compatible_chat(
+                &client,
+                &base_url,
+                api_key,
+                &model,
+                checked_at,
+                ChatProbeReason::ModelsUnsupported,
+            )
+            .await
+        }
+        Ok(resp) => {
+            classify_openai_compatible_probe_response(
+                &client,
+                resp,
+                base_url.clone(),
+                api_key,
+                &model,
+                checked_at,
+            )
+            .await
+        }
         Err(err) => classify_openai_compatible_probe_transport_error(err, base_url.clone(), checked_at),
     };
 
@@ -217,7 +241,7 @@ fn normalize_mineru_local_base_url(raw: &str) -> String {
     let trimmed = raw.trim().trim_end_matches('/');
     if trimmed.is_empty() {
         std::env::var("RETAIN_MINERU_LOCAL_BASE_URL")
-            .unwrap_or_else(|_| "http://mineru:8000".to_string())
+            .unwrap_or_else(|_| "http://host.docker.internal:18080".to_string())
             .trim()
             .trim_end_matches('/')
             .to_string()
@@ -235,9 +259,119 @@ fn normalize_openai_compatible_base_url(raw: &str) -> String {
     }
 }
 
-async fn classify_openai_compatible_probe_response(
+fn should_fallback_to_chat_probe(status: reqwest::StatusCode) -> bool {
+    matches!(
+        status,
+        reqwest::StatusCode::NOT_FOUND
+            | reqwest::StatusCode::METHOD_NOT_ALLOWED
+            | reqwest::StatusCode::NOT_IMPLEMENTED
+    )
+}
+
+#[derive(Clone, Copy)]
+enum ChatProbeReason {
+    ModelsUnsupported,
+    ModelNotListed,
+}
+
+async fn probe_openai_compatible_chat(
+    client: &reqwest::Client,
+    base_url: &str,
+    api_key: &str,
+    model: &str,
+    checked_at: String,
+    reason: ChatProbeReason,
+) -> MineruTokenValidationView {
+    let url = format!("{}/chat/completions", base_url.trim_end_matches('/'));
+    let response = client
+        .post(&url)
+        .bearer_auth(api_key)
+        .json(&serde_json::json!({
+            "model": model,
+            "messages": [{"role": "user", "content": "ping"}],
+            "temperature": 0,
+            "max_tokens": 1
+        }))
+        .send()
+        .await;
+    match response {
+        Ok(resp) => {
+            classify_openai_compatible_chat_probe_response(resp, base_url.to_string(), checked_at, reason).await
+        }
+        Err(err) => classify_openai_compatible_probe_transport_error(err, base_url.to_string(), checked_at),
+    }
+}
+
+async fn classify_openai_compatible_chat_probe_response(
     response: reqwest::Response,
     base_url: String,
+    checked_at: String,
+    reason: ChatProbeReason,
+) -> MineruTokenValidationView {
+    let status_code = response.status();
+    let trace_id = response
+        .headers()
+        .get("x-request-id")
+        .and_then(|value| value.to_str().ok())
+        .map(|value| value.to_string());
+    let body_text = response.text().await.unwrap_or_default();
+    if status_code.is_success() {
+        let (provider_message, operator_hint) = match reason {
+            ChatProbeReason::ModelsUnsupported => (
+                "chat/completions probe ok; /models probe unsupported",
+                "该服务未提供 /models，已改用 chat/completions 做连通性校验",
+            ),
+            ChatProbeReason::ModelNotListed => (
+                "chat/completions probe ok; requested model was not listed by /models",
+                "该服务的 /models 未列出该模型，但 chat/completions 最小请求已通过",
+            ),
+        };
+        return MineruTokenValidationView {
+            ok: true,
+            status: "valid",
+            summary: "模型服务接口可用".to_string(),
+            retryable: false,
+            provider_code: Some(status_code.as_u16().to_string()),
+            provider_message: Some(provider_message.to_string()),
+            operator_hint: Some(operator_hint.to_string()),
+            trace_id,
+            base_url,
+            checked_at,
+        };
+    }
+    let status = if status_code == reqwest::StatusCode::UNAUTHORIZED
+        || status_code == reqwest::StatusCode::FORBIDDEN
+    {
+        "unauthorized"
+    } else if status_code.is_server_error() {
+        "network_error"
+    } else {
+        "provider_error"
+    };
+    MineruTokenValidationView {
+        ok: false,
+        status,
+        summary: if status == "unauthorized" {
+            "模型 API Key 无效".to_string()
+        } else {
+            format!("模型服务 chat/completions 返回 {}", status_code.as_u16())
+        },
+        retryable: status != "unauthorized",
+        provider_code: Some(status_code.as_u16().to_string()),
+        provider_message: summarize_deepseek_error_payload(&body_text),
+        operator_hint: Some("该服务未提供 /models，已改用 chat/completions 校验；请检查 Base URL、模型名和 Key".to_string()),
+        trace_id,
+        base_url,
+        checked_at,
+    }
+}
+
+async fn classify_openai_compatible_probe_response(
+    client: &reqwest::Client,
+    response: reqwest::Response,
+    base_url: String,
+    api_key: &str,
+    model: &str,
     checked_at: String,
 ) -> MineruTokenValidationView {
     let status_code = response.status();
@@ -249,6 +383,20 @@ async fn classify_openai_compatible_probe_response(
     let body_text = response.text().await.unwrap_or_default();
 
     if status_code.is_success() {
+        if !model.is_empty() {
+            let model_ids = extract_openai_compatible_model_ids(&body_text);
+            if !model_ids.is_empty() && !model_ids.iter().any(|id| id == model) {
+                return probe_openai_compatible_chat(
+                    client,
+                    &base_url,
+                    api_key,
+                    model,
+                    checked_at,
+                    ChatProbeReason::ModelNotListed,
+                )
+                .await;
+            }
+        }
         return MineruTokenValidationView {
             ok: true,
             status: "valid",
@@ -328,11 +476,8 @@ fn classify_openai_compatible_probe_transport_error(
 }
 
 fn summarize_openai_compatible_models_payload(body_text: &str) -> Option<String> {
-    let parsed: Value = serde_json::from_str(body_text).ok()?;
-    let data = parsed.get("data")?.as_array()?;
-    let models = data
-        .iter()
-        .filter_map(|item| item.get("id").and_then(|value| value.as_str()))
+    let models = extract_openai_compatible_model_ids(body_text)
+        .into_iter()
         .take(3)
         .collect::<Vec<_>>();
     if models.is_empty() {
@@ -340,6 +485,20 @@ fn summarize_openai_compatible_models_payload(body_text: &str) -> Option<String>
     } else {
         Some(format!("models probe ok: {}", models.join(", ")))
     }
+}
+
+fn extract_openai_compatible_model_ids(body_text: &str) -> Vec<String> {
+    let Some(parsed) = serde_json::from_str::<Value>(body_text).ok() else {
+        return Vec::new();
+    };
+    let Some(data) = parsed.get("data").and_then(|value| value.as_array()) else {
+        return Vec::new();
+    };
+    data
+        .iter()
+        .filter_map(|item| item.get("id").and_then(|value| value.as_str()))
+        .map(|value| value.to_string())
+        .collect::<Vec<_>>()
 }
 
 fn summarize_deepseek_error_payload(body_text: &str) -> Option<String> {

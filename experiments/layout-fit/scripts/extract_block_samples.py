@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 
-JOBS_ROOT = Path("/home/wxyhgk/tmp/Code/data/jobs")
+JOBS_ROOT = Path("/workspace/example-project/data/jobs")
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 PDF_LINK_DIR = PROJECT_ROOT / "fixtures" / "source-pdfs"
 PDF_PAGE_DIR = PROJECT_ROOT / "fixtures" / "pdf-pages"

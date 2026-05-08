@@ -1,6 +1,6 @@
 {
-  "repo_root": "/home/wxyhgk/tmp/Code",
-  "scripts_root": "/home/wxyhgk/tmp/Code/backend/scripts",
+  "repo_root": "/workspace/example-project",
+  "scripts_root": "/workspace/example-project/backend/scripts",
   "runtime_python_packages": [
     "Pillow",
     "PyMuPDF",

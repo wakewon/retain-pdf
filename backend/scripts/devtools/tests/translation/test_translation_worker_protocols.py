@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 
-REPO_SCRIPTS_ROOT = Path("/home/wxyhgk/tmp/Code/backend/scripts")
+REPO_SCRIPTS_ROOT = Path("/workspace/example-project/backend/scripts")
 TRANSLATE_ONLY_PIPELINE = REPO_SCRIPTS_ROOT / "services" / "translation" / "translate_only_pipeline.py"
 FROM_OCR_PIPELINE = REPO_SCRIPTS_ROOT / "services" / "translation" / "from_ocr_pipeline.py"
 

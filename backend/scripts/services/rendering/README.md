@@ -54,7 +54,7 @@ scripts/services/rendering/
 
 `translation JSON -> layout/payload -> typst -> PDF`
 
-上层通常通过 [render_stage.py](/home/wxyhgk/tmp/Code/backend/scripts/runtime/pipeline/render_stage.py) 调用这里的能力。
+上层通常通过 [render_stage.py](/workspace/example-project/backend/scripts/runtime/pipeline/render_stage.py) 调用这里的能力。
 
 输入边界：
 
@@ -87,13 +87,13 @@ scripts/services/rendering/
 
 ## 推荐入口
 
-- [render_stage.py](/home/wxyhgk/tmp/Code/backend/scripts/runtime/pipeline/render_stage.py)
-- [services/rendering/api](/home/wxyhgk/tmp/Code/backend/scripts/services/rendering/api)
+- [render_stage.py](/workspace/example-project/backend/scripts/runtime/pipeline/render_stage.py)
+- [services/rendering/api](/workspace/example-project/backend/scripts/services/rendering/api)
 
 ## 公式回归
 
 如果新增了一条公式归一化规则，直接把坏例子补到
-[`devtools/tests/translation/test_formula_math_markers.py`](/home/wxyhgk/tmp/Code/backend/scripts/devtools/tests/translation/test_formula_math_markers.py)
+[`devtools/tests/translation/test_formula_math_markers.py`](/workspace/example-project/backend/scripts/devtools/tests/translation/test_formula_math_markers.py)
 里的参数化回归测试。
 
 ## 协作规矩

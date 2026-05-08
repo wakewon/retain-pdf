@@ -7,13 +7,13 @@
 相关文档：
 
 - 总体架构边界：
-  [`RUST_API_ARCHITECTURE.md`](/home/wxyhgk/tmp/Code/backend/rust_api/RUST_API_ARCHITECTURE.md)
+  [`RUST_API_ARCHITECTURE.md`](/workspace/example-project/backend/rust_api/RUST_API_ARCHITECTURE.md)
 - 当前运行主链：
-  [`CURRENT_API_MAP.md`](/home/wxyhgk/tmp/Code/backend/rust_api/CURRENT_API_MAP.md)
+  [`CURRENT_API_MAP.md`](/workspace/example-project/backend/rust_api/CURRENT_API_MAP.md)
 - stage 运行时契约：
-  [`STAGE_EXECUTION_CONTRACT.md`](/home/wxyhgk/tmp/Code/backend/rust_api/STAGE_EXECUTION_CONTRACT.md)
+  [`STAGE_EXECUTION_CONTRACT.md`](/workspace/example-project/backend/rust_api/STAGE_EXECUTION_CONTRACT.md)
 - Paddle OCR API 摘要：
-  [`src/ocr_provider/paddle/API_SUMMARY.md`](/home/wxyhgk/tmp/Code/backend/rust_api/src/ocr_provider/paddle/API_SUMMARY.md)
+  [`src/ocr_provider/paddle/API_SUMMARY.md`](/workspace/example-project/backend/rust_api/src/ocr_provider/paddle/API_SUMMARY.md)
 
 ## 1. 目标
 
@@ -34,11 +34,11 @@
 
 ## 2. 当前目录
 
-- [src/ocr_provider/mod.rs](/home/wxyhgk/tmp/Code/backend/rust_api/src/ocr_provider/mod.rs)
-- [src/ocr_provider/types.rs](/home/wxyhgk/tmp/Code/backend/rust_api/src/ocr_provider/types.rs)
-- [src/ocr_provider/catalog.rs](/home/wxyhgk/tmp/Code/backend/rust_api/src/ocr_provider/catalog.rs)
-- [src/ocr_provider/mineru](/home/wxyhgk/tmp/Code/backend/rust_api/src/ocr_provider/mineru)
-- [src/ocr_provider/paddle](/home/wxyhgk/tmp/Code/backend/rust_api/src/ocr_provider/paddle)
+- [src/ocr_provider/mod.rs](/workspace/example-project/backend/rust_api/src/ocr_provider/mod.rs)
+- [src/ocr_provider/types.rs](/workspace/example-project/backend/rust_api/src/ocr_provider/types.rs)
+- [src/ocr_provider/catalog.rs](/workspace/example-project/backend/rust_api/src/ocr_provider/catalog.rs)
+- [src/ocr_provider/mineru](/workspace/example-project/backend/rust_api/src/ocr_provider/mineru)
+- [src/ocr_provider/paddle](/workspace/example-project/backend/rust_api/src/ocr_provider/paddle)
 
 ## 3. 分工
 
@@ -200,4 +200,4 @@ provider 能力声明只能有一个注册口，不能到处 `match kind`.
 
 当前这个注册口就是：
 
-- [catalog.rs](/home/wxyhgk/tmp/Code/backend/rust_api/src/ocr_provider/catalog.rs)
+- [catalog.rs](/workspace/example-project/backend/rust_api/src/ocr_provider/catalog.rs)

@@ -55,7 +55,7 @@
 
 ### 1. 把跨页 block 恢复成 flow group
 
-在 [extract_block_samples.py](/home/wxyhgk/tmp/Code/experiments/layout-fit/scripts/extract_block_samples.py) 中增加了跨页续接检测：
+在 [extract_block_samples.py](/workspace/example-project/experiments/layout-fit/scripts/extract_block_samples.py) 中增加了跨页续接检测：
 
 - 顺序扫描 OCR text block
 - 如果上一块以英文词中间结尾、下一块以小写或续接样式开头，并且跨页相邻
@@ -74,7 +74,7 @@
 
 ### 2. 前端改成多框串流，而不是单框独立拟合
 
-在 [pretext.html](/home/wxyhgk/tmp/Code/experiments/layout-fit/html/pretext.html) 中：
+在 [pretext.html](/workspace/example-project/experiments/layout-fit/html/pretext.html) 中：
 
 - 对属于同一 `flow` 的多个 box，先把文本拼成一个连续段落
 - 用 `pretext.layoutNextLine()` 按 box 顺序逐框消费行

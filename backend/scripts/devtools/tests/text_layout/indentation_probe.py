@@ -11,7 +11,7 @@ sys.path.append(str(Path(__file__).resolve().parents[3]))
 from services.mineru.contracts import MINERU_LAYOUT_JSON_FILE_NAME
 
 
-DEFAULT_LAYOUT = Path("/home/wxyhgk/tmp/Code/output/20260329083711-18ea65/ocr/unpacked") / MINERU_LAYOUT_JSON_FILE_NAME
+DEFAULT_LAYOUT = Path("/workspace/example-project/output/20260329083711-18ea65/ocr/unpacked") / MINERU_LAYOUT_JSON_FILE_NAME
 TEXTUAL_TYPES = {"text", "list", "title", "image_caption", "table_caption", "table_footnote"}
 
 

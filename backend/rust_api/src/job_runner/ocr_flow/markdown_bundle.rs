@@ -9,21 +9,31 @@ pub(super) fn export_markdown_bundle(provider_raw_dir: &str, job_root: Option<&s
     let provider_raw_dir = Path::new(provider_raw_dir);
     let markdown_dir = Path::new(job_root).join("md");
     std::fs::create_dir_all(&markdown_dir)?;
+    let mut published_full_md = false;
 
-    for entry in std::fs::read_dir(provider_raw_dir)
-        .with_context(|| format!("failed to read {}", provider_raw_dir.display()))?
+    export_markdown_tree(provider_raw_dir, &markdown_dir, &mut published_full_md)?;
+
+    Ok(())
+}
+
+fn export_markdown_tree(
+    source_dir: &Path,
+    markdown_dir: &Path,
+    published_full_md: &mut bool,
+) -> Result<()> {
+    for entry in std::fs::read_dir(source_dir)
+        .with_context(|| format!("failed to read {}", source_dir.display()))?
     {
         let entry = entry?;
         let source_path = entry.path();
         let file_name = entry.file_name();
-        let target_path = markdown_dir.join(&file_name);
 
-        if source_path.is_file()
-            && source_path
-                .extension()
-                .and_then(|ext| ext.to_str())
-                .is_some_and(|ext| ext.eq_ignore_ascii_case("md"))
-        {
+        if source_path.is_file() && is_markdown_file(&source_path) {
+            let target_path = markdown_dir.join(if *published_full_md {
+                file_name.as_ref()
+            } else {
+                std::ffi::OsStr::new("full.md")
+            });
             std::fs::copy(&source_path, &target_path).with_context(|| {
                 format!(
                     "failed to copy markdown file from {} to {}",
@@ -31,15 +41,25 @@ pub(super) fn export_markdown_bundle(provider_raw_dir: &str, job_root: Option<&s
                     target_path.display()
                 )
             })?;
+            *published_full_md = true;
             continue;
         }
 
-        if source_path.is_dir() && file_name == "images" {
-            copy_dir_recursive(&source_path, &target_path)?;
+        if source_path.is_dir() {
+            if file_name == "images" {
+                copy_dir_recursive(&source_path, &markdown_dir.join("images"))?;
+            } else {
+                export_markdown_tree(&source_path, markdown_dir, published_full_md)?;
+            }
         }
     }
-
     Ok(())
+}
+
+fn is_markdown_file(path: &Path) -> bool {
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("md"))
 }
 
 fn copy_dir_recursive(source_dir: &Path, target_dir: &Path) -> Result<()> {

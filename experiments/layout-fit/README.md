@@ -2,15 +2,15 @@
 
 当前绝对路径：
 
-`/home/wxyhgk/tmp/Code/experiments/layout-fit`
+`/workspace/example-project/experiments/layout-fit`
 
 现有任务数据目录：
 
-`/home/wxyhgk/tmp/Code/data`
+`/workspace/example-project/data`
 
 现有任务目录：
 
-`/home/wxyhgk/tmp/Code/data/jobs`
+`/workspace/example-project/data/jobs`
 
 这个目录是排版实验区，目标是探索两类能力：
 
@@ -26,7 +26,7 @@
 
 也就是说，实验人员优先从这里取数据：
 
-`/home/wxyhgk/tmp/Code/data/jobs/{job_id}`
+`/workspace/example-project/data/jobs/{job_id}`
 
 一个典型任务目录通常包含：
 
@@ -59,28 +59,28 @@
 如果只是做排版、字体、行高、块拟合实验，优先看下面这些文件：
 
 - 主 OCR 统一结构：
-  `/home/wxyhgk/tmp/Code/data/jobs/{job_id}/ocr/normalized/document.v1.json`
+  `/workspace/example-project/data/jobs/{job_id}/ocr/normalized/document.v1.json`
 - OCR 统一结构说明文档：
-  `/home/wxyhgk/tmp/Code/backend/scripts/services/document_schema/README.md`
+  `/workspace/example-project/backend/scripts/services/document_schema/README.md`
 - OCR 统一结构机器 schema：
-  `/home/wxyhgk/tmp/Code/backend/scripts/services/document_schema/document.v1.schema.json`
+  `/workspace/example-project/backend/scripts/services/document_schema/document.v1.schema.json`
 - OCR 原始 provider 结果摘要：
-  `/home/wxyhgk/tmp/Code/data/jobs/{job_id}/ocr/mineru_result.json`
+  `/workspace/example-project/data/jobs/{job_id}/ocr/mineru_result.json`
 - OCR 原始 unpacked 内容：
-  `/home/wxyhgk/tmp/Code/data/jobs/{job_id}/ocr/unpacked/layout.json`
+  `/workspace/example-project/data/jobs/{job_id}/ocr/unpacked/layout.json`
 - OCR 原始 content list：
-  `/home/wxyhgk/tmp/Code/data/jobs/{job_id}/ocr/unpacked/content_list_v2.json`
+  `/workspace/example-project/data/jobs/{job_id}/ocr/unpacked/content_list_v2.json`
 - 翻译页级结果：
-  `/home/wxyhgk/tmp/Code/data/jobs/{job_id}/translated/page-XXX-deepseek.json`
+  `/workspace/example-project/data/jobs/{job_id}/translated/page-XXX-deepseek.json`
 - 领域上下文：
-  `/home/wxyhgk/tmp/Code/data/jobs/{job_id}/translated/domain-context.json`
+  `/workspace/example-project/data/jobs/{job_id}/translated/domain-context.json`
 - Typst 排版输入与输出：
-  `/home/wxyhgk/tmp/Code/data/jobs/{job_id}/rendered/typst/book-overlays/book-overlay.typ`
-  `/home/wxyhgk/tmp/Code/data/jobs/{job_id}/rendered/typst/book-overlays/book-overlay.pdf`
+  `/workspace/example-project/data/jobs/{job_id}/rendered/typst/book-overlays/book-overlay.typ`
+  `/workspace/example-project/data/jobs/{job_id}/rendered/typst/book-overlays/book-overlay.pdf`
 - 事件流：
-  `/home/wxyhgk/tmp/Code/data/jobs/{job_id}/logs/events.jsonl`
+  `/workspace/example-project/data/jobs/{job_id}/logs/events.jsonl`
 - 任务汇总：
-  `/home/wxyhgk/tmp/Code/data/jobs/{job_id}/artifacts/pipeline_summary.json`
+  `/workspace/example-project/data/jobs/{job_id}/artifacts/pipeline_summary.json`
 
 ## 实验时优先把哪个 JSON 当真源
 
@@ -106,11 +106,11 @@
 如果是新接手的人，先按下面顺序看：
 
 1. 本文件：
-   `/home/wxyhgk/tmp/Code/experiments/layout-fit/README.md`
+   `/workspace/example-project/experiments/layout-fit/README.md`
 2. OCR 统一结构说明：
-   `/home/wxyhgk/tmp/Code/backend/scripts/services/document_schema/README.md`
+   `/workspace/example-project/backend/scripts/services/document_schema/README.md`
 3. 选一个真实任务目录：
-   `/home/wxyhgk/tmp/Code/data/jobs/{job_id}`
+   `/workspace/example-project/data/jobs/{job_id}`
 4. 先打开：
    - `ocr/normalized/document.v1.json`
    - `translated/page-001-deepseek.json`

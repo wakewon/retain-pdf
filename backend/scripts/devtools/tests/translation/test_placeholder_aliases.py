@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 
-REPO_SCRIPTS_ROOT = Path("/home/wxyhgk/tmp/Code/backend/scripts")
+REPO_SCRIPTS_ROOT = Path("/workspace/example-project/backend/scripts")
 
 
 def load_placeholder_guard():

@@ -95,7 +95,7 @@ http://127.0.0.1:40001
 ## 文件作用
 
 - `docker-compose.yml`
-  Docker 编排入口。默认启动 `app` + `web` + `mineru`，也支持本地 `docker compose build app web mineru`。
+  Docker 编排入口。默认启动 `app` + `web`；重型 MinerU sidecar 放在 `mineru-sidecar` profile 中，需要时再启用。
 - `docker/app.env`
   后端运行参数。控制容器内路径、字体、端口、并发和上传限制。
 - `docker/web.env`
@@ -103,7 +103,7 @@ http://127.0.0.1:40001
 - `docker/auth.local.json`
   Rust API 鉴权白名单。前端和 CLI 都需要用这里配置的后端 key 才能访问接口。
 - `models/mineru/`
-  本地 MinerU 模型与缓存目录，会挂载到 `mineru` 容器内的 `/models/mineru`，避免重建容器后反复下载权重。
+  可选 MinerU sidecar 的模型与缓存目录。默认推荐使用宿主机 MinerU bridge 时不会用到这个目录。
 
 ## 常见修改项
 
@@ -158,7 +158,7 @@ http://127.0.0.1:40001
 - `RUST_API_SIMPLE_PORT`
   简便同步接口在容器内监听的端口，默认 `42000`。
 - `RETAIN_MINERU_LOCAL_BASE_URL`
-  后端访问本地 MinerU sidecar 的地址。Docker 默认是 `http://mineru:8000`。
+  后端访问本机或内网 MinerU API 的地址。Docker 默认是 `http://host.docker.internal:18080`，即宿主机上的 bridge。
 - `RUST_API_MAX_RUNNING_JOBS`
   最大并发运行任务数。
 - `RUST_API_NORMAL_MAX_BYTES`
@@ -172,14 +172,68 @@ http://127.0.0.1:40001
   - `40001`：前端页面
   - `41000`：完整 Rust API
   - `42000`：简便同步接口
-  - `mineru:8000`：仅 Docker 内网访问，不默认暴露给宿主机
 - 前端通过同源代理访问后端；普通用户通常不需要手工理解 `API Base`
 - 当前 Docker 前端默认 OCR provider 是 `mineru_local`
 - 页面里显示的大小 / 页数限制来自当前后端运行配置，不应再按旧的 MinerU 固定上游限制理解
 
-## 本地 MinerU 模型目录
+## 本机 MinerU Bridge
 
-Docker 模式会把当前目录下的 `models/mineru/` 挂载到 MinerU 容器内：
+推荐把 MinerU 跑在宿主机已有的 uv / conda 环境里，然后让 Docker 后端通过 HTTP 调用它。这样 RetainPDF 镜像不需要打进 PyTorch、CUDA、MinerU 模型权重。
+
+macOS uv 示例：
+
+```bash
+cd /workspace/example-project
+uv run --directory /workspace/example-mineru-service \
+  python tools/mineru_api_bridge.py --host 127.0.0.1 --port 18080
+```
+
+Windows conda 示例：
+
+```powershell
+conda activate zotero-mcp
+cd C:\path\to\retain-pdf
+python tools\mineru_api_bridge.py --host 0.0.0.0 --port 18080
+```
+
+常用配置：
+
+- `MINERU_BACKEND`
+  MinerU backend，默认 `pipeline`。GPU 环境可按实际安装改为 MinerU 支持的 backend。
+- `MINERU_LANG`
+  默认语言，默认 `ch`。RetainPDF 请求里的语言会覆盖这个默认值。
+- `MINERU_WORKDIR`
+  bridge 临时工作目录。建议放在空间充足的本机磁盘。
+- `MINERU_TIMEOUT_SECS`
+  单个 `/file_parse` 请求超时，默认 `1800`。
+- `MINERU_COMMAND`
+  可选。设置后 bridge 改为调用外部 `mineru` 命令，而不是 Python API。
+- `MINERU_COMMAND_TEMPLATE`
+  可选。完全自定义命令模板，可用 `{input}`、`{output}`、`{backend}`、`{parse_method}`、`{lang}` 占位。
+
+启动 Docker 服务：
+
+```bash
+docker compose up -d app web
+```
+
+后端默认会访问：
+
+```text
+http://host.docker.internal:18080
+```
+
+Linux Docker 如果不支持 `host.docker.internal`，可在 `docker/app.env` 中把 `RETAIN_MINERU_LOCAL_BASE_URL` 改为宿主机网关或局域网 IP。
+
+## 可选 MinerU Sidecar
+
+如果仍希望把 MinerU 放在 Docker 里，可以启用 `mineru-sidecar` profile：
+
+```bash
+docker compose --profile mineru-sidecar up -d mineru app web
+```
+
+Sidecar 模式会把当前目录下的 `models/mineru/` 挂载到 MinerU 容器内：
 
 ```text
 docker/delivery/models/mineru  ->  /models/mineru
@@ -210,6 +264,12 @@ MINERU_DOWNLOAD_MODELS_ON_START=0 docker compose up -d mineru
 ```
 
 可选下载源包括 `modelscope` 和 `huggingface`；可选模型类型包括 `pipeline`、`vlm`、`all`。网络环境不适合 HuggingFace 时，建议使用 `modelscope`。
+
+启用 sidecar 时，需要把 `docker/app.env` 里的地址改为：
+
+```text
+RETAIN_MINERU_LOCAL_BASE_URL=http://mineru:8000
+```
 
 ## 可选默认值
 
@@ -243,12 +303,12 @@ docker compose up -d
 ```bash
 export HOST="http://127.0.0.1:40001"
 export X_API_KEY="replace-with-your-backend-key"
-export OCR_PROVIDER="paddle"
+export OCR_PROVIDER="mineru_local"
 export PADDLE_TOKEN="your-paddle-token"
 export MINERU_TOKEN="your-mineru-token"
 export MODEL_API_KEY="your-model-api-key"
-export MODEL="deepseek-v4-flash"
-export BASE_URL="https://api.deepseek.com/v1"
+export MODEL="glm-4-flash"
+export BASE_URL="https://open.bigmodel.cn/api/paas/v4"
 ```
 
 ## 健康检查
@@ -396,5 +456,6 @@ curl -X POST "$HOST/api/v1/translate/bundle" \
 
 说明：
 
-- `provider` 建议显式传 `paddle` 或 `mineru`
+- `provider` 建议显式传 `mineru_local`、`paddle` 或 `mineru`
 - `paddle_token` / `mineru_token` 只需要传当前 `provider` 对应的那个
+- `mineru_local` 不需要 OCR token，但需要先启动本机 MinerU bridge 或可访问的 mineru-api

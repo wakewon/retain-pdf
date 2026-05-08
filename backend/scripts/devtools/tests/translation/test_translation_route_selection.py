@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest import mock
 
 
-REPO_SCRIPTS_ROOT = Path("/home/wxyhgk/tmp/Code/backend/scripts")
+REPO_SCRIPTS_ROOT = Path("/workspace/example-project/backend/scripts")
 sys.path.insert(0, str(REPO_SCRIPTS_ROOT))
 
 from services.translation.llm.shared.control_context import build_translation_control_context

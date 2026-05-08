@@ -3,7 +3,7 @@
   "apiBase": "http://127.0.0.1:41000",
   "workflow": "book",
   "ocrProvider": "paddle",
-  "file": "/home/wxyhgk/tmp/Code/data/temPDF/test1.pdf",
+  "file": "/workspace/example-project/data/temPDF/test1.pdf",
   "uploadId": "20260425141726-42b198",
   "jobId": "20260425141726-2c40e0",
   "finalStatus": "succeeded",

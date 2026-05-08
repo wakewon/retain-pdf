@@ -217,7 +217,7 @@ export function mountBrowserCredentialsFeature({
     }
   }
 
-  async function runModelConnectivityCheck(apiKey, baseUrl, { showResult = true } = {}) {
+  async function runModelConnectivityCheck(apiKey, baseUrl, model, { showResult = true } = {}) {
     const modelApiKey = `${apiKey || ""}`.trim();
     if (!modelApiKey) {
       if (showResult) {
@@ -232,6 +232,7 @@ export function mountBrowserCredentialsFeature({
       const result = await validateOpenAICompatibleToken(API_PREFIX, {
         api_key: modelApiKey,
         base_url: baseUrl || defaultModelBaseUrl(),
+        model: model || defaultModelName(),
       });
       if (showResult) {
         setDeepSeekValidationMessage(
@@ -463,8 +464,8 @@ export function mountBrowserCredentialsFeature({
   }
 
   async function handleBrowserDeepSeekValidate() {
-    const { apiKeyInput, baseUrlInput } = browserCredentialElements();
-    await runModelConnectivityCheck(apiKeyInput?.value || "", baseUrlInput?.value || "", { showResult: true });
+    const { apiKeyInput, baseUrlInput, modelInput } = browserCredentialElements();
+    await runModelConnectivityCheck(apiKeyInput?.value || "", baseUrlInput?.value || "", modelInput?.value || "", { showResult: true });
   }
 
   async function handleBrowserCredentialSave() {

@@ -36,6 +36,7 @@ __MACOSX/
 desktop/linux/
 desktop/win_jobid/
 data/
+test-inputs/
 *.dmg
 *.AppImage
 backend/python/

@@ -221,15 +221,15 @@
 
 ## Python 依赖真相源
 
-当前 Python 依赖已经收敛到仓库根目录的 [`pyproject.toml`](/home/wxyhgk/tmp/Code/pyproject.toml)。
+当前 Python 依赖已经收敛到仓库根目录的 [`pyproject.toml`](/workspace/example-project/pyproject.toml)。
 
 不要直接手改这些 requirements 文件：
 
-- [`docker/requirements-app.txt`](/home/wxyhgk/tmp/Code/docker/requirements-app.txt)
-- [`docker/requirements-test.txt`](/home/wxyhgk/tmp/Code/docker/requirements-test.txt)
-- [`desktop/requirements-desktop-posix.txt`](/home/wxyhgk/tmp/Code/desktop/requirements-desktop-posix.txt)
-- [`desktop/requirements-desktop-windows.txt`](/home/wxyhgk/tmp/Code/desktop/requirements-desktop-windows.txt)
-- [`desktop/requirements-desktop-macos.txt`](/home/wxyhgk/tmp/Code/desktop/requirements-desktop-macos.txt)
+- [`docker/requirements-app.txt`](/workspace/example-project/docker/requirements-app.txt)
+- [`docker/requirements-test.txt`](/workspace/example-project/docker/requirements-test.txt)
+- [`desktop/requirements-desktop-posix.txt`](/workspace/example-project/desktop/requirements-desktop-posix.txt)
+- [`desktop/requirements-desktop-windows.txt`](/workspace/example-project/desktop/requirements-desktop-windows.txt)
+- [`desktop/requirements-desktop-macos.txt`](/workspace/example-project/desktop/requirements-desktop-macos.txt)
 
 修改依赖后统一执行：
 
